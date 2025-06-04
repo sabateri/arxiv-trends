@@ -39,13 +39,14 @@ def get_bigquery_client():
 client = get_bigquery_client()
 analyzer = ArxivAnalyzer(client)
 
-# Available domains (you can expand this list)
-AVAILABLE_DOMAINS = [
-    'hep-ex', 'hep-ph', 'hep-th', 'astro-ph', 'cond-mat', 'gr-qc',
-    'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'quant-ph',
-    'cs', 'math', 'stat', 'eess', 'econ', 'q-bio', 'q-fin'
-]
+# Available domains
+# AVAILABLE_DOMAINS = [
+#     'hep-ex', 'hep-ph', 'hep-th', 'astro-ph', 'cond-mat', 'gr-qc',
+#     'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'quant-ph',
+#     'cs', 'math', 'stat', 'eess', 'econ', 'q-bio', 'q-fin'
+# ]
 
+AVAILABLE_DOMAINS = ['hep-ex','cs']
 # Plot types configuration
 PLOT_TYPES = {
     'papers_per_month': {
