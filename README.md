@@ -18,7 +18,8 @@ This project explores research topic evolution using data from the arXiv API. It
 ![arxiv webpage image](images/machine_learning_search.png)
 ## Getting Started
 
-
+### Prerequisites
+You will need a GCS (Google Cloud Storage) account. The credentials from your Google Service Account should be placed at ```keys/arxiv-trends-key.json```
 
 1. Clone this repository:
    ```bash
