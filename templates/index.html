@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArXiv Trends Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            margin-bottom: 1rem;
+            color: #4a5568;
+            font-size: 1.3rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .additional-params {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .additional-params.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .param-group {
+            margin-bottom: 1rem;
+        }
+
+        .param-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-height: 2.5rem;
+            padding: 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            cursor: text;
+        }
+
+        .tags-input:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            font-size: 1rem;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            width: 100%;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .plot-container {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .plot-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .plot-info {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #e6fffa;
+            border-radius: 10px;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid #f56565;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ArXiv Trends Analyzer</h1>
+            <p>Explore research trends and patterns in academic papers</p>
+        </div>
+
+        <div class="card">
+            <form id="plotForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="domain">Research Domain:</label>
+                        <select id="domain" name="domain" required>
+                            <option value="">Select a domain...</option>
+                            {% for domain in domains %}
+                            <option value="{{ domain }}">{{ domain.upper() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="plot_type">Visualization Type:</label>
+                        <select id="plot_type" name="plot_type" required>
+                            <option value="">Select plot type...</option>
+                            {% for key, value in plot_types.items() %}
+                            <option value="{{ key }}" data-description="{{ value.description }}">{{ value.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div id="additional-params" class="additional-params">
+                    <h4 style="margin-bottom: 1rem; color: #4a5568;">Additional Parameters</h4>
+                    
+                    <div id="word-params" class="param-group" style="display: none;">
+                        <label for="words">Words to track (press Enter to add):</label>
+                        <div class="tags-input" id="words-tags">
+                            <input type="text" class="tag-input" placeholder="Type a word and press Enter">
+                        </div>
+                        <small style="color: #718096; margin-top: 0.5rem; display: block;">
+                            Default: collision, decay, search
+                        </small>
+                    </div>
+
+                    <div id="bigram-params" class="param-group" style="display: none;">
+                        <label for="bigrams">Bigrams to track (press Enter to add):</label>
+                        <div class="tags-input" id="bigrams-tags">
+                            <input type="text" class="tag-input" placeholder="Type a bigram and press Enter">
+                        </div>
+                        <small style="color: #718096; margin-top: 0.5rem; display: block;">
+                            Default: higgs boson, machine learning, dark matter
+                        </small>
+                    </div>
+
+                    <div id="column-params" class="param-group" style="display: none;">
+                        <label for="column">Search in:</label>
+                        <select id="column" name="column">
+                            <option value="cleaned_title">Paper Titles</option>
+                            <option value="cleaned_summary">Paper Summaries</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="generate-btn" id="generateBtn">
+                    Generate Visualization
+                </button>
+            </form>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Generating your visualization...</p>
+            </div>
+
+            <div id="error" class="error">
+                <strong>Error:</strong> <span id="error-message"></span>
+            </div>
+        </div>
+
+        <div id="result-section" class="card result-section">
+            <div class="plot-info">
+                <h3 id="plot-title">Visualization Results</h3>
+                <p id="plot-description"></p>
+            </div>
+            <div class="plot-container">
+                <img id="plot-image" class="plot-image" src="" alt="Generated Plot">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TagsInput {
+            constructor(container, defaultTags = []) {
+                this.container = container;
+                this.input = container.querySelector('.tag-input');
+                this.tags = [...defaultTags];
+                this.init();
+            }
+
+            init() {
+                this.render();
+                this.input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && this.input.value.trim()) {
+                        e.preventDefault();
+                        this.addTag(this.input.value.trim());
+                    } else if (e.key === 'Backspace' && !this.input.value && this.tags.length > 0) {
+                        this.removeTag(this.tags.length - 1);
+                    }
+                });
+
+                this.container.addEventListener('click', () => {
+                    this.input.focus();
+                });
+            }
+
+            addTag(text) {
+                if (!this.tags.includes(text)) {
+                    this.tags.push(text);
+                    this.render();
+                }
+                this.input.value = '';
+            }
+
+            removeTag(index) {
+                this.tags.splice(index, 1);
+                this.render();
+            }
+
+            render() {
+                const existingTags = this.container.querySelectorAll('.tag');
+                existingTags.forEach(tag => tag.remove());
+
+                this.tags.forEach((tag, index) => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag';
+                    tagElement.innerHTML = `
+                        ${tag}
+                        <span class="tag-remove" onclick="this.parentElement.remove(); window.tagsInputs.forEach(ti => { const idx = ti.tags.indexOf('${tag}'); if(idx > -1) ti.tags.splice(idx, 1); })">×</span>
+                    `;
+                    this.container.insertBefore(tagElement, this.input);
+                });
+            }
+
+            getTags() {
+                return this.tags;
+            }
+
+            setTags(tags) {
+                this.tags = [...tags];
+                this.render();
+            }
+        }
+
+        // Initialize tags inputs
+        const wordsTagsInput = new TagsInput(
+            document.getElementById('words-tags'),
+            ['collision', 'decay', 'search']
+        );
+
+        const bigramsTagsInput = new TagsInput(
+            document.getElementById('bigrams-tags'),
+            ['higgs boson', 'machine learning', 'dark matter']
+        );
+
+        // Store globally for access in tag removal
+        window.tagsInputs = [wordsTagsInput, bigramsTagsInput];
+
+        // Handle plot type changes
+        document.getElementById('plot_type').addEventListener('change', function() {
+            const plotType = this.value;
+            const additionalParams = document.getElementById('additional-params');
+            const wordParams = document.getElementById('word-params');
+            const bigramParams = document.getElementById('bigram-params');
+            const columnParams = document.getElementById('column-params');
+
+            // Hide all params first
+            wordParams.style.display = 'none';
+            bigramParams.style.display = 'none';
+            columnParams.style.display = 'none';
+            additionalParams.classList.remove('show');
+
+            // Show relevant params based on plot type
+            if (plotType === 'word_trends') {
+                wordParams.style.display = 'block';
+                columnParams.style.display = 'block';
+                additionalParams.classList.add('show');
+            } else if (plotType === 'bigram_trends') {
+                bigramParams.style.display = 'block';
+                columnParams.style.display = 'block';
+                additionalParams.classList.add('show');
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('plotForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const plotType = formData.get('plot_type');
+            const domain = formData.get('domain');
+            
+            const data = {
+                domain: domain,
+                plot_type: plotType
+            };
+
+            // Add additional parameters based on plot type
+            if (plotType === 'word_trends') {
+                data.words = wordsTagsInput.getTags();
+                data.column = document.getElementById('column').value;
+            } else if (plotType === 'bigram_trends') {
+                data.bigrams = bigramsTagsInput.getTags();
+                data.column = document.getElementById('column').value;
+            }
+
+            // Show loading state
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('result-section').classList.remove('show');
+
+            try {
+                const response = await fetch('/generate_plot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show result
+                    document.getElementById('plot-title').textContent = `${result.plot_type} - ${result.domain}`;
+                    document.getElementById('plot-description').textContent = 
+                        document.querySelector(`option[value="${plotType}"]`).dataset.description;
+                    document.getElementById('plot-image').src = `data:image/png;base64,${result.plot_url}`;
+                    document.getElementById('result-section').classList.add('show');
+                } else {
+                    throw new Error(result.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                document.getElementById('error-message').textContent = error.message;
+                document.getElementById('error').classList.add('show');
+            } finally {
+                // Hide loading state
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('generateBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
