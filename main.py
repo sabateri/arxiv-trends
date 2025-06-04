@@ -70,6 +70,15 @@ def main():
     DOMAIN = args.domain
 
 
+    # Print configuration
+    print("Configuration:")
+    print(f"CREATE_BUCKET = {CREATE_BUCKET}")
+    print(f"UPLOAD_TO_GCS = {UPLOAD_TO_GCS}")
+    print(f"PROCESS_SPARK = {PROCESS_SPARK}")
+    print(f"START_YEAR = '{START_YEAR}'")
+    print(f"END_YEAR = '{END_YEAR}'")
+    print(f"DOMAIN = '{DOMAIN}'")
+
     # Download files locally
     for year in range(START_YEAR, END_YEAR, 1):
         df = fetch_papers_by_years(start_year=year, end_year=year+1, domain = DOMAIN, file_path="./data")

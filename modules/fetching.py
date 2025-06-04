@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional
 import arxiv
 import pandas as pd
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -29,12 +30,13 @@ def fetch_papers(query: str = "hep-ex", max_papers: int = 500) -> List[Dict[str,
     Returns:
         List of dictionaries containing paper information
     """
+
     search = arxiv.Search(
         query=query,
         max_results=max_papers,
         sort_by=arxiv.SortCriterion.SubmittedDate
     )
-    
+
     # Create client object
     client = arxiv.Client()
     
@@ -48,6 +50,7 @@ def fetch_papers(query: str = "hep-ex", max_papers: int = 500) -> List[Dict[str,
             "submission_date": paper.published.date(),
             "id": paper.entry_id,
             "author": paper.authors,
+            #"author": [author.name for author in paper.authors],
             "primary_category": paper.primary_category,
             "categories": paper.categories
         })
@@ -94,12 +97,12 @@ def fetch_papers_by_years(
     months = [f"{i:02}" for i in range(1, 13)]  # 01, 02, ..., 12
 
     papers = []
-    
     for year in years:
         for month in months:
             query = f"{domain} AND submittedDate:[{year}{month}01 TO {year}{month}31]"
+            #query = f"cat:{domain} AND submittedDate:[{year}{month}01 TO {year}{month}31]"
             try:
-                month_papers = fetch_papers(query=query, max_papers=500)
+                month_papers = fetch_papers(query=query, max_papers=10000)
                 papers.extend(month_papers)
                 logger.info(f"Fetched {len(month_papers)} papers for {year}-{month}")
                 

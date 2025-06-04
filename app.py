@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from urllib.parse import quote
+from google.oauth2 import service_account
 import os
 import json
 
@@ -16,7 +17,26 @@ from arxiv_analyzer import ArxivAnalyzer
 app = Flask(__name__)
 
 # Initialize BigQuery client and analyzer
-client = bigquery.Client(project="arxiv-trends")
+def get_bigquery_client():
+    """Initialize BigQuery client with service account credentials"""
+    project_id = os.environ.get('GOOGLE_CLOUD_PROJECT')
+    
+    # For production (Render)
+    if os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON'):
+        credentials_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+        credentials_dict = json.loads(credentials_json)
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+        client = bigquery.Client(project=project_id, credentials=credentials)
+    # For local development
+    elif os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'):
+        client = bigquery.Client(project=project_id)
+    else:
+        # Fallback - might not work without proper auth
+        client = bigquery.Client(project=project_id)
+    
+    return client
+
+client = get_bigquery_client()
 analyzer = ArxivAnalyzer(client)
 
 # Available domains (you can expand this list)
@@ -193,4 +213,9 @@ def get_plot_types():
     return jsonify(PLOT_TYPES)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # for local testing
+    #app.run(debug=True, host='0.0.0.0', port=5000) 
+    # for production
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=port)

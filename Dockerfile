@@ -20,6 +20,10 @@ COPY . /app/
 # Expose the port the app runs on
 EXPOSE 5000
 
+# Set environment variables
+ENV GOOGLE_APPLICATION_CREDENTIALS="/app/keys/arxiv-trends-key.json"
+ENV GOOGLE_CLOUD_PROJECT="arxiv-trends"
+
 # Command to run the application
 #CMD ["python", "app.py"]
 CMD ["gunicorn", "app:app", "--timeout", "300", "--bind", "0.0.0.0:5000"]
