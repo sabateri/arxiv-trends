@@ -46,7 +46,7 @@ analyzer = ArxivAnalyzer(client)
 #     'cs', 'math', 'stat', 'eess', 'econ', 'q-bio', 'q-fin'
 # ]
 
-AVAILABLE_DOMAINS = ['hep-ex','cs']
+AVAILABLE_DOMAINS = ['hep-ex','cs','cs.AI']
 # Plot types configuration
 PLOT_TYPES = {
     'papers_per_month': {
@@ -99,6 +99,11 @@ def fig_to_base64(fig):
     plot_url = base64.b64encode(img.getvalue()).decode()
     plt.close(fig)  # Important: close figure to free memory
     return plot_url
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 
 @app.route('/')
 def index():

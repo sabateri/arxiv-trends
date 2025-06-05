@@ -23,6 +23,7 @@ class ArxivAnalyzer:
         Query to take the number of papers per month
         """
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         query = f"""
         SELECT
         FORMAT_DATE('%Y-%m', DATE(submission_date)) AS month,
@@ -142,6 +143,7 @@ class ArxivAnalyzer:
         Query to take the average length of the title or summary
         """
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         # average title length per year
         query= f"""
         SELECT
@@ -161,6 +163,7 @@ class ArxivAnalyzer:
 
     def create_average_author_query(self, domain = 'hep-ex', column='author'):
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         """
         Query to take the average number of authors per month per paper
         """
@@ -185,6 +188,7 @@ class ArxivAnalyzer:
         Query to take the top N number of words used in the papers
         """
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         query = f"""
             SELECT
             word,
@@ -341,6 +345,7 @@ class ArxivAnalyzer:
 
     def create_top_bigrams_query(self, domain = 'hep-ex', column='cleaned_title',top_n=20):
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         query = f"""
         WITH word_pairs AS (
             SELECT
@@ -372,6 +377,7 @@ class ArxivAnalyzer:
 
     def create_specific_words_trend_query(self, domain = 'hep-ex', column='cleaned_title', words_to_plot=['collision', 'decay', 'search']):
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         words_to_sql = ', '.join([f"'{w}'" for w in words_to_plot])  # wrap each word in quotes
         query = f"""
         SELECT
@@ -512,6 +518,7 @@ class ArxivAnalyzer:
 
     def create_specific_bigrams_trend_query(self, domain = 'hep-ex', column='cleaned_title', bigrams_to_plot=['higgs boson', 'machine learning','dark matter']):
         domain_cleaned = domain.replace("-", "_")
+        domain_cleaned = domain_cleaned.replace(".", "_")
         bigrams_to_sql = ', '.join([f"'{bigram}'" for bigram in bigrams_to_plot])
         query = f"""
         WITH bigrams AS (
