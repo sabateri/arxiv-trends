@@ -29,7 +29,7 @@ class ArxivAnalyzer:
         FORMAT_DATE('%Y-%m', DATE(submission_date)) AS month,
         COUNT(DISTINCT {column}) AS my_column
         FROM
-        `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`
+        `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`
         GROUP BY
         month
         ORDER BY
@@ -149,8 +149,13 @@ class ArxivAnalyzer:
         SELECT
             FORMAT_DATE('%Y-%m', DATE(submission_date)) AS month,
             AVG(ARRAY_LENGTH(SPLIT({column}, ' '))) AS my_column
-        FROM
-            `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`
+            FROM (
+            SELECT DISTINCT 
+                id,
+                submission_date,
+                {column}
+            FROM `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`
+            )
         GROUP BY
             month
         ORDER BY
@@ -172,8 +177,14 @@ class ArxivAnalyzer:
         SELECT
             FORMAT_DATE('%Y-%m', DATE(submission_date)) AS month,
             AVG(ARRAY_LENGTH({column})) AS my_column
-        FROM
-            `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`
+            FROM (
+            SELECT DISTINCT 
+                id,
+                submission_date,
+                {column}
+            FROM 
+                `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`
+            )
         GROUP BY
             month
         ORDER BY
@@ -192,9 +203,9 @@ class ArxivAnalyzer:
         query = f"""
             SELECT
             word,
-            COUNT(*) AS count   
+            COUNT(DISTINCT id) AS count   
             FROM
-            `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`,
+            `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`,
             UNNEST({column}) AS word
             GROUP BY
             word
@@ -349,17 +360,18 @@ class ArxivAnalyzer:
         query = f"""
         WITH word_pairs AS (
             SELECT
+            id,
             {column}[OFFSET(i)] AS word1,
             {column}[OFFSET(i+1)] AS word2
             FROM
-            `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`,
+            `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`,
             UNNEST(GENERATE_ARRAY(0, ARRAY_LENGTH({column}) - 2)) AS i
             WHERE
             ARRAY_LENGTH({column}) >= 2
         )
         SELECT
             CONCAT(word1, ' ', word2) AS bigram,
-            COUNT(*) AS count
+            COUNT(DISTINCT id) AS count
         FROM word_pairs
         GROUP BY
             bigram
@@ -383,9 +395,9 @@ class ArxivAnalyzer:
         SELECT
             FORMAT_DATE('%Y', DATE(submission_date)) AS year,
             word,
-            COUNT(*) AS count
+            COUNT(DISTINCT id) AS count
         FROM
-            `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`,
+            `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`,
             UNNEST({column}) AS word
         WHERE
             word IN ({words_to_sql})
@@ -523,10 +535,11 @@ class ArxivAnalyzer:
         query = f"""
         WITH bigrams AS (
             SELECT
+            id,
             FORMAT_DATE('%Y', DATE(submission_date)) AS year,
             CONCAT({column}[OFFSET(i)], ' ', {column}[OFFSET(i+1)]) AS bigram
             FROM
-            `arxiv-trends.arxiv_papers.arxiv_{domain_cleaned}_papers_2000_2025`,
+            `arxiv-trends.arxiv_papers.arxiv_papers_2000_2025_{domain_cleaned}*`,
             UNNEST(GENERATE_ARRAY(0, ARRAY_LENGTH({column}) - 2)) AS i
             WHERE
             ARRAY_LENGTH({column}) >= 2
@@ -534,7 +547,7 @@ class ArxivAnalyzer:
         SELECT
             year,
             bigram,
-            COUNT(*) AS count
+            COUNT(DISTINCT id) AS count
         FROM
             bigrams
         WHERE

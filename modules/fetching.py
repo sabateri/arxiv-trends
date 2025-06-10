@@ -97,10 +97,13 @@ def fetch_papers_by_years(
     months = [f"{i:02}" for i in range(1, 13)]  # 01, 02, ..., 12
 
     papers = []
+    #domain_query = " OR ".join(domains)
     for year in years:
         for month in months:
-            query = f"{domain} AND submittedDate:[{year}{month}01 TO {year}{month}31]"
-            #query = f"cat:{domain} AND submittedDate:[{year}{month}01 TO {year}{month}31]"
+            #query = f"{domain} AND submittedDate:[{year}{month}01 TO {year}{month}31]"
+            query = f"cat:{domain} AND submittedDate:[{year}{month}01 TO {year}{month}31]"
+            #query = f"({domain_query}) AND submittedDate:[{year}{month}01 TO {year}{month}31]"
+
             try:
                 month_papers = fetch_papers(query=query, max_papers=10000)
                 papers.extend(month_papers)

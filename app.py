@@ -46,7 +46,8 @@ analyzer = ArxivAnalyzer(client)
 #     'cs', 'math', 'stat', 'eess', 'econ', 'q-bio', 'q-fin'
 # ]
 
-AVAILABLE_DOMAINS = ['hep-ex','cs','cs.AI']
+#AVAILABLE_DOMAINS = ['hep-ex','cs','cs.AI', 'astro-ph.CO','astro-ph.EP','astro-ph.GA','astro-ph.HE','astro-ph.IM','astro-ph.SR']
+AVAILABLE_DOMAINS = ['hep-ex','cs', 'astro-ph']
 # Plot types configuration
 PLOT_TYPES = {
     'papers_per_month': {
