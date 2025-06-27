@@ -13,3 +13,6 @@ airflow/config/*
 
 airflow/plugins/*
 !airflow/plugins/.gitkeep
+
+# terraform
+terraform/terraform.tfvars
