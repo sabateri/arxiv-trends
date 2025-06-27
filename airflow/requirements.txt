@@ -1,3 +1,8 @@
 pandas
+arxiv
+nltk
 pyarrow
+google-cloud-storage
+pyspark==3.5.4
+textblob
 apache-airflow[google]

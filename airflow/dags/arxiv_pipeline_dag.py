@@ -8,7 +8,7 @@ import logging
 import tempfile
 
 import nltk
-nltk.download('stopwords')
+#nltk.download('stopwords') # already downloading it in the Dockerfile
 
 # Add the modules folder to Python path
 #sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../modules')))
@@ -24,20 +24,24 @@ from processing_spark import (
     process_column,
     calculate_sentiment,
     save_file_bigquery,
-    process_column_spark_native
+    process_column_spark_native,
+    spark_stop
 )
 
 # DAG parameters
-DOMAINS = ['cs.SY']
-START_YEAR = 2000
-END_YEAR = 2025
+DOMAINS = ['cs.SI']
+START_YEAR = 2015
+END_YEAR = 2016
 
+PROJECT_NAME = os.getenv('GCP_PROJECT')
 BUCKET_NAME = os.getenv('BUCKET_NAME')
+BQ_DATASET = os.getenv('BQ_DATASET')
 JAVA_HOME = os.getenv('JAVA_HOME')
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 # Use Airflow's temporary directory
-TMP_DIR = tempfile.gettempdir()
+# for distributed executor (like Celery), tasks might run on different workers, meaning TMP_DIR on one worker isn't accessible by another.  If we switch executors, intermediate data (like the parquet files from fetch_data) should be stored in a shared location (like GCS, which we already do for the final upload)
+TMP_DIR = tempfile.gettempdir() 
 
 # Default Airflow arguments
 default_args = {
@@ -84,28 +88,28 @@ def upload_data():
 
 # Task 3: Process in Spark and load to BigQuery
 def transform_and_load():
-    spark = spark_init(key_file=GOOGLE_APPLICATION_CREDENTIALS)
+    spark = spark_init(key_file=GOOGLE_APPLICATION_CREDENTIALS, project_name=PROJECT_NAME)
     print('Done initializing pyspark')
     for domain in DOMAINS:
         dataframes = []
         for year in range(START_YEAR, END_YEAR):
             gcs_file_name = f'arxiv_data/{domain}/arxiv_{domain}_papers_{year}-{year+1}.parquet'
             print('Checking if the file already exists in GCP')
-        if check_gcs_file_exists(bucket_name=BUCKET_NAME, gcs_file_name=gcs_file_name):
-            # pyspark processing
-            print('Setting spark schema')
-            df = set_spark_schema(spark, file_name=f'gs://{BUCKET_NAME}/{gcs_file_name}')
-            print('Processing columns')
-            #df = process_column(df, 'title')
-            #df = process_column(df, 'summary')
-            df = process_column_spark_native(df, 'title')
-            df = process_column_spark_native(df, 'summary')
-            df = calculate_sentiment(df, 'title')
-            df = calculate_sentiment(df, 'summary')
-            dataframes.append(df)
-        else:
-            print(f"File gs://{BUCKET_NAME}/{gcs_file_name} does not exist, check if it should.")
-            continue
+            if check_gcs_file_exists(bucket_name=BUCKET_NAME, gcs_file_name=gcs_file_name, project_name=PROJECT_NAME):
+                # pyspark processing
+                print('Setting spark schema')
+                df = set_spark_schema(spark, file_name=f'gs://{BUCKET_NAME}/{gcs_file_name}')
+                print('Processing columns')
+                #df = process_column(df, 'title')
+                #df = process_column(df, 'summary')
+                df = process_column_spark_native(df, 'title')
+                df = process_column_spark_native(df, 'summary')
+                df = calculate_sentiment(df, 'title')
+                df = calculate_sentiment(df, 'summary')
+                dataframes.append(df)
+            else:
+                print(f"File gs://{BUCKET_NAME}/{gcs_file_name} does not exist, check if it should.")
+                continue
             # merge the dataframes
     print('Merging dataframes')
     if dataframes:
@@ -120,15 +124,11 @@ def transform_and_load():
         DOMAIN_CLEANED = domain.replace("-", "_")
         DOMAIN_CLEANED = DOMAIN_CLEANED.replace(".", "_")
         # attaching the domain at the end so later we can use wildcards in querying in BigQuery
-        #output_table = f'arxiv-trends.arxiv_papers.arxiv_{DOMAIN_CLEANED}_papers_{START_YEAR}_{END_YEAR}'
-        output_table = f'arxiv-trends.arxiv_papers.arxiv_papers_{START_YEAR}_{END_YEAR}_{DOMAIN_CLEANED}'
+        output_table = f'{PROJECT_NAME}.{BQ_DATASET}.{BQ_DATASET}_{START_YEAR}_{END_YEAR}_{DOMAIN_CLEANED}'
         #print(df.printSchema())
-        #print(df.select("title", "summary", "author","cleaned_title","cleaned_summary").limit(5).show())
-        #print(df.drop("cleaned_title", "cleaned_summary", "sentiment_title", "sentiment_summary").show())
-        #print(df.drop("cleaned_title", "cleaned_summary").show())
-        #print(df.show())
         save_file_bigquery(merged_df,output_table)
         print(f"Data merged and saved to BigQuery table: {output_table}")
+        spark_stop(spark)
     else:
         print("No dataframes were merged.")
 

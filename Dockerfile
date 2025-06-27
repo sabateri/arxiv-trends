@@ -5,7 +5,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 
-# Copy requirements file first (if you have one)
+# Copy requirements file first
 # This is a good practice to leverage Docker cache
 COPY requirements.txt /app/
 

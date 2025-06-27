@@ -26,7 +26,7 @@ lemmatizer = WordNetLemmatizer()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-def spark_init(key_file="../keys/arxiv-trends-key.json"):
+def spark_init(key_file="my-json-key.json", project_name='my-project'):
 
     # to upload to bigquery
     spark = SparkSession.builder \
@@ -44,7 +44,7 @@ def spark_init(key_file="../keys/arxiv-trends-key.json"):
     
     # Authentication 
     spark.conf.set("google.cloud.auth.service.account.json.keyfile", key_file)
-    spark.conf.set("parentProject", "arxiv-trends")
+    spark.conf.set("parentProject", project_name)
 
     # need this line to avoid columns with type arrays not being present when copying to bigquery
     spark.conf.set("spark.datasource.bigquery.intermediateFormat", "orc")
@@ -137,6 +137,7 @@ def process_column_spark_native(df: DataFrame, column: str) -> DataFrame:
     )
     df = stopwords_remover.transform(df)
     
+    
     # Clean up intermediate columns
     df = df.drop(f"{column}_lower", f"{column}_clean", f"{column}_tokens")
     
@@ -205,8 +206,8 @@ def calculate_sentiment(df: DataFrame, column_name: str) -> DataFrame:
     return df
 
 
-def check_gcs_file_exists(bucket_name, gcs_file_name):
-    client = storage.Client(project="arxiv-trends")
+def check_gcs_file_exists(bucket_name, gcs_file_name, project_name):
+    client = storage.Client(project=project_name)
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(gcs_file_name)
     return blob.exists()

@@ -2,3 +2,4 @@ data/
 keys/
 __pycache__/
 todo.txt
+.env

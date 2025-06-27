@@ -6,10 +6,9 @@ WORKDIR /app
 # Switch to root for installing system dependencies
 USER root
 # Install Java
-#RUN apt-get update && apt-get install -y openjdk-11-jdk
 #RUN apt-get update && apt install -y default-jre && apt-get clean
-RUN apt-get update && apt-get install -y default-jdk && apt-get clean
-
+#RUN apt-get update && apt-get install -y default-jdk && apt-get clean # this version works but might get unstable with my code if the default java is not 17
+RUN apt-get update && apt-get install -y openjdk-17-jdk && apt-get clean
 # Set JAVA_HOME environment variable
 # Check where JAVA is by running the container and then $ update-alternatives --config java
 #ENV JAVA_HOME=/usr/lib/jvm/default-java
@@ -41,8 +40,8 @@ COPY requirements.txt /app/
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir arxiv pandas nltk pyarrow google-cloud-storage
-RUN pip install --no-cache-dir pyspark==3.5.4 textblob pandas nltk
+
+RUN python -c "import nltk; nltk.download('stopwords')"
 
 # RUN mkdir -p /opt/spark/jars && \
 #     curl -L -o /opt/spark/jars/gcs-connector.jar https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar
