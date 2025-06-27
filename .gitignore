@@ -3,3 +3,13 @@ keys/
 __pycache__/
 todo.txt
 .env
+
+# Ignore contents of airflow folders but keep the folders
+airflow/logs/*
+!airflow/logs/.gitkeep
+
+airflow/config/*
+!airflow/config/.gitkeep
+
+airflow/plugins/*
+!airflow/plugins/.gitkeep
